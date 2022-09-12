@@ -112,6 +112,7 @@ if(APPLE)
 endif()
 
 target_link_libraries(diffvg ${DYNAMIC_LOOKUP})
+target_link_libraries(diffvg hip::host)
 
 if(WIN32)
     # See: https://pybind11.readthedocs.io/en/master/compiling.html#advanced-interface-library-target
