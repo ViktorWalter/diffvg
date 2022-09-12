@@ -1113,7 +1113,7 @@ Vector4f sample_color_prefiltered(const SceneData &scene,
 }
 
 struct weight_kernel {
-    DEVICE void operator()(int idx) {
+    DEVICE void operator()(int idx) const {
         auto rng_state = init_pcg32(idx, seed);
         // height * width * num_samples_y * num_samples_x
         auto sx = idx % num_samples_x;
@@ -1490,12 +1490,12 @@ void render(std::shared_ptr<Scene> scene,
             bool use_prefiltering,
             ptr<float> eval_positions,
             int num_eval_positions) {
-#ifdef __NVCC__
+#ifdef __HIPCC__
     int old_device_id = -1;
     if (scene->use_gpu) {
-        checkCuda(cudaGetDevice(&old_device_id));
+        checkCuda(hipGetDevice(&old_device_id));
         if (scene->gpu_index != -1) {
-            checkCuda(cudaSetDevice(scene->gpu_index));
+            checkCuda(hipSetDevice(scene->gpu_index));
         }
     }
 #endif
@@ -1504,10 +1504,10 @@ void render(std::shared_ptr<Scene> scene,
     float *weight_image = nullptr;
     // Allocate and zero the weight image
     if (scene->use_gpu) {
-#ifdef __CUDACC__
+#ifdef __HIPCC__
         if (eval_positions.get() == nullptr) {
-            checkCuda(cudaMallocManaged(&weight_image, width * height * sizeof(float)));
-            cudaMemset(weight_image, 0, width * height * sizeof(float));
+            checkCuda(hipMallocManaged(&weight_image, width * height * sizeof(float)));
+            hipMemset(weight_image, 0, width * height * sizeof(float));
         }
 #else
         assert(false);
@@ -1563,12 +1563,12 @@ void render(std::shared_ptr<Scene> scene,
         uint32_t *morton_codes = nullptr; // for sorting
         // Allocate boundary samples
         if (scene->use_gpu) {
-#ifdef __CUDACC__
-            checkCuda(cudaMallocManaged(&boundary_samples,
+#ifdef __HIPCC__
+            checkCuda(hipMallocManaged(&boundary_samples,
                 num_samples * sizeof(BoundarySample)));
-            checkCuda(cudaMallocManaged(&boundary_ids,
+            checkCuda(hipMallocManaged(&boundary_ids,
                 num_samples * sizeof(int)));
-            checkCuda(cudaMallocManaged(&morton_codes,
+            checkCuda(hipMallocManaged(&morton_codes,
                 num_samples * sizeof(uint32_t)));
 #else
             assert(false);
@@ -1611,10 +1611,10 @@ void render(std::shared_ptr<Scene> scene,
             num_samples_y
         }, num_samples, scene->use_gpu);
         if (scene->use_gpu) {
-#ifdef __CUDACC__
-            checkCuda(cudaFree(boundary_samples));
-            checkCuda(cudaFree(boundary_ids));
-            checkCuda(cudaFree(morton_codes));
+#ifdef __HIPCC__
+            checkCuda(hipFree(boundary_samples));
+            checkCuda(hipFree(boundary_ids));
+            checkCuda(hipFree(morton_codes));
 #else
             assert(false);
 #endif
@@ -1627,8 +1627,8 @@ void render(std::shared_ptr<Scene> scene,
 
     // Clean up weight image
     if (scene->use_gpu) {
-#ifdef __CUDACC__
-        checkCuda(cudaFree(weight_image));
+#ifdef __HIPCC__
+        checkCuda(hipFree(weight_image));
 #else
         assert(false);
 #endif
@@ -1641,9 +1641,9 @@ void render(std::shared_ptr<Scene> scene,
     }
 
     parallel_cleanup();
-#ifdef __NVCC__
+#ifdef __HIPCC__
     if (old_device_id != -1) {
-        checkCuda(cudaSetDevice(old_device_id));
+        checkCuda(hipSetDevice(old_device_id));
     }
 #endif
 }

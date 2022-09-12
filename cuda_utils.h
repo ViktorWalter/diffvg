@@ -1,17 +1,23 @@
 #pragma once
 
-#ifdef __CUDACC__
-    #include <cuda.h>
-    #include <cuda_runtime.h>
+#ifdef __HIPCC__ 
+    #define DEVICE __device__ __host__ 
+#else
+    #define DEVICE
+#endif
+
+#ifdef __HIPCC__
+    #include <hip/hip_runtime.h>
+    #include <hip/hip_runtime.h>
 #endif
 #include <cstdio>
 #include <cassert>
 #include <limits>
 
-#ifdef __CUDACC__
-#define checkCuda(x) do { if((x)!=cudaSuccess) { \
+#ifdef __HIPCC__
+#define checkCuda(x) do { if((x)!=hipSuccess) { \
     printf("CUDA Runtime Error: %s at %s:%d\n",\
-    cudaGetErrorString(x),__FILE__,__LINE__);\
+    hipGetErrorString(x),__FILE__,__LINE__);\
     exit(1);}} while(0)
 #endif
 
@@ -47,7 +53,7 @@ inline float infinity() {
 }
 
 inline void cuda_synchronize() {
-#ifdef __CUDACC__
-    checkCuda(cudaDeviceSynchronize());
+#ifdef __HIPCC__
+    checkCuda(hipDeviceSynchronize());
 #endif
 }

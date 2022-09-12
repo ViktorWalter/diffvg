@@ -17,8 +17,8 @@ size_t align(size_t s) {
 template <typename T>
 void allocate(bool use_gpu, T **p) {
     if (use_gpu) {
-#ifdef __NVCC__
-        checkCuda(cudaMallocManaged(p, sizeof(T)));
+#ifdef __HIPCC__
+        checkCuda(hipMallocManaged(p, sizeof(T)));
 #else
         throw std::runtime_error("diffvg not compiled with GPU");
         assert(false);
@@ -31,8 +31,8 @@ void allocate(bool use_gpu, T **p) {
 template <typename T>
 void allocate(bool use_gpu, size_t size, T **p) {
     if (use_gpu) {
-#ifdef __NVCC__
-        checkCuda(cudaMallocManaged(p, size * sizeof(T)));
+#ifdef __HIPCC__
+        checkCuda(hipMallocManaged(p, size * sizeof(T)));
 #else
         throw std::runtime_error("diffvg not compiled with GPU");
         assert(false);
@@ -186,7 +186,7 @@ compute_shape_length(const std::vector<const Shape *> &shape_list) {
                         assert(false);
                     }
                 }
-                assert(isfinite(length));
+                assert(std::isfinite(length));
                 shape_length += length;
                 break;
             } case ShapeType::Rect: {
@@ -198,7 +198,7 @@ compute_shape_length(const std::vector<const Shape *> &shape_list) {
                 break;
             }
         }
-        assert(isfinite(shape_length));
+        assert(std::isfinite(shape_length));
         shape_length_list[shape_id] = shape_length;
     }
     return shape_length_list;
@@ -220,7 +220,7 @@ void build_shape_cdfs(Scene &scene,
                 scene.sample_shapes_cdf[sample_id] = length +
                     scene.sample_shapes_cdf[sample_id - 1];
             }
-            assert(isfinite(length));
+            assert(std::isfinite(length));
             scene.sample_shapes_pmf[sample_id] = length;
             scene.sample_group_id[sample_id] = shape_group_id;
             sample_id++;
@@ -233,7 +233,7 @@ void build_shape_cdfs(Scene &scene,
         sprintf(buf, "The total length of the shape boundaries in the scene is equal or less than 0. Length = %f", normalization);
         throw std::runtime_error(buf);
     }
-    if (!isfinite(normalization)) {
+    if (!std::isfinite(normalization)) {
         char buf[256];
         sprintf(buf, "The total length of the shape boundaries in the scene is not a number. Length = %f", normalization);
         throw std::runtime_error(buf);
@@ -941,14 +941,14 @@ Scene::Scene(int canvas_width,
     this->num_total_shapes = num_total_shapes;
 
     // Memory initialization
-#ifdef __NVCC__
+#ifdef __HIPCC__
     int old_device_id = -1;
 #endif
     if (use_gpu) {
-#ifdef __NVCC__
-        checkCuda(cudaGetDevice(&old_device_id));
+#ifdef __HIPCC__
+        checkCuda(hipGetDevice(&old_device_id));
         if (gpu_index != -1) {
-            checkCuda(cudaSetDevice(gpu_index));
+            checkCuda(hipSetDevice(gpu_index));
         }
 #else
         throw std::runtime_error("diffvg not compiled with GPU");
@@ -968,8 +968,8 @@ Scene::Scene(int canvas_width,
     std::vector<float> shape_length_list = compute_shape_length(shape_list);
     // Copy shape_length
     if (use_gpu) {
-#ifdef __NVCC__
-        checkCuda(cudaMemcpy(this->shapes_length, &shape_length_list[0], num_shapes * sizeof(float), cudaMemcpyHostToDevice));
+#ifdef __HIPCC__
+        checkCuda(hipMemcpy(this->shapes_length, &shape_length_list[0], num_shapes * sizeof(float), hipMemcpyHostToDevice));
 #else
         throw std::runtime_error("diffvg not compiled with GPU");
         assert(false);
@@ -986,9 +986,9 @@ Scene::Scene(int canvas_width,
     this->d_filter->radius = 0;
 
     if (use_gpu) {
-#ifdef __NVCC__
+#ifdef __HIPCC__
         if (old_device_id != -1) {
-            checkCuda(cudaSetDevice(old_device_id));
+            checkCuda(hipSetDevice(old_device_id));
         }
 #else
         throw std::runtime_error("diffvg not compiled with GPU");
@@ -1002,16 +1002,16 @@ Scene::~Scene() {
         return;
     }
     if (use_gpu) {
-#ifdef __NVCC__
+#ifdef __HIPCC__
         int old_device_id = -1;
-        checkCuda(cudaGetDevice(&old_device_id));
+        checkCuda(hipGetDevice(&old_device_id));
         if (gpu_index != -1) {
-            checkCuda(cudaSetDevice(gpu_index));
+            checkCuda(hipSetDevice(gpu_index));
         }
 
-        checkCuda(cudaFree(buffer));
+        checkCuda(hipFree(buffer));
 
-        checkCuda(cudaSetDevice(old_device_id));
+        checkCuda(hipSetDevice(old_device_id));
 #else
         // Don't throw because C++ don't want a destructor to throw.
         std::cerr << "diffvg not compiled with GPU";

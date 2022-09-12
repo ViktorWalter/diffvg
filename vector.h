@@ -737,23 +737,23 @@ void d_coordinate_system(const TVector3<T> &n, const TVector3<T> &d_x, const TVe
 
 DEVICE
 inline bool isfinite(const Vector2 &v) {
-    return isfinite(v.x) &&
-           isfinite(v.y);
+    return std::isfinite(v.x) &&
+           std::isfinite(v.y);
 }
 
 DEVICE
 inline bool isfinite(const Vector3 &v) {
-    return isfinite(v.x) &&
-           isfinite(v.y) &&
-           isfinite(v.z);
+    return std::isfinite(v.x) &&
+           std::isfinite(v.y) &&
+           std::isfinite(v.z);
 }
 
 DEVICE
 inline bool isfinite(const Vector4 &v) {
-    return isfinite(v.x) &&
-           isfinite(v.y) &&
-           isfinite(v.z) &&
-           isfinite(v.w);
+    return std::isfinite(v.x) &&
+           std::isfinite(v.y) &&
+           std::isfinite(v.z) &&
+           std::isfinite(v.w);
 }
 
 DEVICE

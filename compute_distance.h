@@ -912,7 +912,7 @@ void d_compute_distance(const Matrix3x3f &canvas_to_shape,
         // The derivative at distance=0 is undefined
         return;
     }
-    assert(isfinite(d_dist));
+    assert(std::isfinite(d_dist));
     // pt is in canvas space, transform it to shape's local space
     auto local_pt = xform_pt(canvas_to_shape, pt);
     auto local_closest_pt = xform_pt(canvas_to_shape, closest_pt);

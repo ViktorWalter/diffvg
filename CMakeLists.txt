@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
+ add_compile_options(-std=c++17)
+
 
 project(diffvg VERSION 0.0.1 DESCRIPTION "Differentiable Vector Graphics")
 
@@ -12,19 +14,26 @@ else()
 endif()
 add_subdirectory(pybind11)
 
-option(DIFFVG_CUDA "Build diffvg with GPU code path?" ON)
+option(DIFFVG_ROCM "Build diffvg with GPU code path?" ON)
 
-if(DIFFVG_CUDA)
-    message(STATUS "Build with CUDA support")
-    find_package(CUDA 10 REQUIRED)
-    set(CMAKE_CUDA_STANDARD 11)
+if(DIFFVG_ROCM)
+  message(STATUS "Build with ROCM support")
+    find_package(hip)
+    # message(${HIP_MODULE_PATH}/cmake)
+    include(/opt/rocm/hip/cmake/FindHIP.cmake)
+    SET( CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH} )
+    enable_language(HIP)
+    set(HIP_STANDARD 17)
     if(NOT WIN32)
         # Hack: for some reason the line above doesn't work on some Linux systems.
-        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+        set(HIP_HIPCC_FLAGS "${HIP_NVCC_FLAGS} -std=c++17 -D__HIP_PLATFORM_AMD__=1")
         #set(CUDA_NVCC_FLAGS_DEBUG "-g -G")
+        # message("Here")
+        # message(${HIP_LIBRARIES})
+        include_directories(${HIP_INCLUDE_DIRS})
     endif()
 else()
-    message(STATUS "Build without CUDA support")
+  message(STATUS "Build without HIP support")
     find_package(Thrust REQUIRED)
 endif()
 
@@ -34,8 +43,8 @@ find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_PATH})
 include_directories(${PYTHON_INCLUDE_DIRS})
 include_directories(pybind11/include)
-if(DIFFVG_CUDA)
-    link_directories(${CUDA_LIBRARIES})
+if(DIFFVG_ROCM)
+  link_directories(${HIP_LIBRARIES})
 else()
     include_directories(${THRUST_INCLUDE_DIR})
 endif()
@@ -48,28 +57,28 @@ else()
   add_link_options(/DEBUG)
 endif()
 
-if(NOT DIFFVG_CUDA)
+if(NOT DIFFVG_ROCM)
     add_compile_options("-DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP")
 endif()
 
-set(SRCS atomic.h
-         color.h
-         cdf.h
-         cuda_utils.h
-         diffvg.h
-         edge_query.h
-         filter.h
-         matrix.h
-         parallel.h
-         pcg.h
-         ptr.h
-         sample_boundary.h
-         scene.h
-         shape.h
-         solve.h
-         vector.h
-         within_distance.h
-         winding_number.h
+set(SRCS 
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
          atomic.cpp
          color.cpp
          diffvg.cpp
@@ -77,14 +86,15 @@ set(SRCS atomic.h
          scene.cpp
          shape.cpp)
 
-if(DIFFVG_CUDA)
-    add_compile_definitions(COMPILE_WITH_CUDA)
+if(DIFFVG_ROCM)
+  add_compile_definitions(COMPILE_WITH_ROCM)
     set_source_files_properties(
         diffvg.cpp
         scene.cpp
-        PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+        PROPERTIES HIP_SOURCE_PROPERTY_FORMAT OBJ)
 
-    cuda_add_library(diffvg MODULE ${SRCS})
+      set_source_files_properties(${SRCS} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+    hip_add_library(diffvg MODULE ${SRCS})
 else()
     add_library(diffvg MODULE ${SRCS})
 endif()
@@ -118,7 +128,9 @@ elseif(APPLE)
     set_target_properties(diffvg PROPERTIES INSTALL_RPATH "@loader_path")
 endif()
 
-set_property(TARGET diffvg PROPERTY CXX_STANDARD 11)
+set_property(TARGET diffvg PROPERTY CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set_target_properties(diffvg PROPERTIES PREFIX "")
 # Still enable assertion in release mode
 string( REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")

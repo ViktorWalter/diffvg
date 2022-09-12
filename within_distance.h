@@ -1,9 +1,11 @@
 #pragma once
 
 #include "diffvg.h"
+#include "scene.h"
 #include "edge_query.h"
 #include "shape.h"
 #include "vector.h"
+#include "solve.h"
 
 DEVICE
 inline

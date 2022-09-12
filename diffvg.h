@@ -1,12 +1,12 @@
 #pragma once
 
-#ifdef __NVCC__ 
+#ifdef __HIPCC__ 
     #define DEVICE __device__ __host__ 
 #else
     #define DEVICE
 #endif
 
-#ifndef __NVCC__
+#ifndef __HIPCC__
     #include <cmath>
     namespace {
         inline float fmodf(float a, float b) {
@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <atomic>
+#include <cassert>
 
 // We use Real for most of the internal computation.
 // However, for PyTorch interfaces, Optix Prime and Embree queries

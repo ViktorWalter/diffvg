@@ -15,10 +15,10 @@ from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
 
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir, build_with_cuda):
+    def __init__(self, name, sourcedir, build_with_rocm):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
-        self.build_with_cuda = build_with_cuda
+        self.build_with_rocm = build_with_rocm
 
 class Build(build_ext):
     def run(self):
@@ -51,10 +51,10 @@ class Build(build_ext):
                 cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
                 build_args += ['--', '-j8']
 
-            if ext.build_with_cuda:
-                cmake_args += ['-DDIFFVG_CUDA=1']
+            if ext.build_with_rocm:
+                cmake_args += ['-DDIFFVG_ROCM=1']
             else:
-                cmake_args += ['-DDIFFVG_CUDA=0']
+                cmake_args += ['-DDIFFVG_ROCM=0']
 
             env = os.environ.copy()
             env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
@@ -69,30 +69,30 @@ class Build(build_ext):
 torch_spec = importlib.util.find_spec("torch")
 tf_spec = importlib.util.find_spec("tensorflow")
 packages = []
-build_with_cuda = False
+build_with_rocm = False
 if torch_spec is not None:
     packages.append('pydiffvg')
     import torch
     if torch.cuda.is_available():
-        build_with_cuda = True
+        build_with_rocm = True
 if tf_spec is not None and sys.platform != 'win32':
     packages.append('pydiffvg_tensorflow')
-    if not build_with_cuda:
+    if not build_with_rocm:
         import tensorflow as tf
-        if tf.test.is_gpu_available(cuda_only=True, min_cuda_compute_capability=None):
-            build_with_cuda = True
+        if tf.test.is_gpu_available(rocm_only=True, min_rocm_compute_capability=None):
+            build_with_rocm = True
 if len(packages) == 0:
     print('Error: PyTorch or Tensorflow must be installed. For Windows platform only PyTorch is supported.')
     exit()
-# Override build_with_cuda with environment variable
-if 'DIFFVG_CUDA' in os.environ:
-    build_with_cuda = os.environ['DIFFVG_CUDA'] == '1'
+# Override build_with_rocm with environment variable
+if 'DIFFVG_ROCM' in os.environ:
+    build_with_rocm = os.environ['DIFFVG_ROCM'] == '1'
 
 setup(name = 'diffvg',
       version = '0.0.1',
       install_requires = ["svgpathtools"],
       description = 'Differentiable Vector Graphics',
-      ext_modules = [CMakeExtension('diffvg', '', build_with_cuda)],
+      ext_modules = [CMakeExtension('diffvg', '', build_with_rocm)],
       cmdclass = dict(build_ext=Build, install=install),
       packages = packages,
       zip_safe = False)

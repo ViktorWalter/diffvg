@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 #pragma once
 
 #include "vector.h"
@@ -34,7 +35,7 @@ int num_system_cores();
 void parallel_init();
 void parallel_cleanup();
 
-#ifdef __CUDACC__
+#ifdef __HIPCC__
 template <typename T>
 __global__ void parallel_for_device_kernel(T functor, int count) {
     auto idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -52,7 +53,7 @@ inline void parallel_for_device(T functor,
     }
     auto block_size = work_per_thread;
     auto block_count = idiv_ceil(count, block_size);
-    parallel_for_device_kernel<T><<<block_count, block_size>>>(functor, count);
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(parallel_for_device_kernel<T>), block_count, block_size, 0, 0, functor, count);
 }
 #endif
 
@@ -68,10 +69,10 @@ inline void parallel_for(T functor,
         return;
     }
     if (use_gpu) {
-#ifdef __CUDACC__
+#ifdef __HIPCC__
         auto block_size = work_per_thread;
         auto block_count = idiv_ceil(count, block_size);
-        parallel_for_device_kernel<T><<<block_count, block_size>>>(functor, count);
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(parallel_for_device_kernel<T>), block_count, block_size, 0, 0, functor, count);
 #else
         throw std::runtime_error("diffvg not compiled with GPU");
         assert(false);
