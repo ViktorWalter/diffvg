@@ -1,13 +1,6 @@
 #pragma once
 
-#ifdef __HIPCC__ 
-    #define DEVICE __device__ __host__ 
-#else
-    #define DEVICE
-#endif
-
 #ifdef __HIPCC__
-    #include <hip/hip_runtime.h>
     #include <hip/hip_runtime.h>
 #endif
 #include <cstdio>

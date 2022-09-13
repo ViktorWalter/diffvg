@@ -164,6 +164,6 @@ struct ShapeGroup {
     ColorType stroke_color_type;
     void *stroke_color;
     bool use_even_odd_rule;
-    Matrix3x3f canvas_to_shape;
-    Matrix3x3f shape_to_canvas;
+    Matrix3x3f canvas_to_shape = Matrix3x3f(0,0,0,0,0,0,0,0,0);
+    Matrix3x3f shape_to_canvas = Matrix3x3f(0,0,0,0,0,0,0,0,0);
 };
