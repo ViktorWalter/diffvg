@@ -13,11 +13,11 @@ import os.path
 
 print(os.path.dirname(diffvg.__file__))
 
-if tf.__cxx11_abi_flag__ == 0:
-    __data_ptr_module = tf.load_op_library(os.path.join(os.path.dirname(diffvg.__file__), 'libdiffvg_tf_data_ptr_no_cxx11_abi.so'))
+if tf.__cxx17_abi_flag__ == 0:
+    __data_ptr_module = tf.load_op_library(os.path.join(os.path.dirname(diffvg.__file__), 'libdiffvg_tf_data_ptr_no_cxx17_abi.so'))
 else:
-    assert(tf.__cxx11_abi_flag__ == 1)
-    __data_ptr_module = tf.load_op_library(os.path.join(os.path.dirname(diffvg.__file__), 'libdiffvg_tf_data_ptr_cxx11_abi.so'))
+    assert(tf.__cxx17_abi_flag__ == 1)
+    __data_ptr_module = tf.load_op_library(os.path.join(os.path.dirname(diffvg.__file__), 'libdiffvg_tf_data_ptr_cxx17_abi.so'))
 
 def data_ptr(tensor):    
     addr_as_uint64 = __data_ptr_module.data_ptr(tensor)
