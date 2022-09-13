@@ -5,8 +5,7 @@
 #include "matrix.h"
 
 // https://stackoverflow.com/questions/39274472/error-function-atomicadddouble-double-has-already-been-defined
-#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
-#else
+#if !defined(__HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__)
 static inline DEVICE double atomicAdd(double *address, double val) {
     unsigned long long int* address_as_ull = (unsigned long long int*)address;
     unsigned long long int old = *address_as_ull, assumed;
@@ -24,7 +23,7 @@ static inline DEVICE double atomicAdd(double *address, double val) {
     template <typename T0, typename T1>
     DEVICE
     inline T0 atomic_add_(T0 &target, T1 source) {
-    #ifdef __CUDA_ARCH__
+    #ifdef __HIP_DEVICE_COMPILE__
         return atomicAdd(&target, (T0)source);
     #else
         T0 old_val;
@@ -54,7 +53,7 @@ static inline DEVICE double atomicAdd(double *address, double val) {
 	double win_atomic_add(double &target, double source);
     DEVICE
     static float atomic_add(float &target, float source) {
-    #ifdef __CUDA_ARCH__
+    #ifdef __HIP_DEVICE_COMPILE__
         return atomicAdd(&target, source);
     #else
 		return win_atomic_add(target, source);
@@ -62,7 +61,7 @@ static inline DEVICE double atomicAdd(double *address, double val) {
     }
     DEVICE
     static double atomic_add(double &target, double source) {
-    #ifdef __CUDA_ARCH__
+    #ifdef __HIP_DEVICE_COMPILE__
         return atomicAdd(&target, (double)source);
     #else
 		return win_atomic_add(target, source);

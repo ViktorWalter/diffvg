@@ -24,7 +24,7 @@
 template <typename T>
 DEVICE
 inline T infinity() {
-#ifdef __CUDA_ARCH__
+#ifdef __HIP_DEVICE_COMPILE__
     const unsigned long long ieee754inf = 0x7ff0000000000000;
     return __longlong_as_double(ieee754inf);
 #else
@@ -35,7 +35,7 @@ inline T infinity() {
 template <>
 DEVICE
 inline double infinity() {
-#ifdef __CUDA_ARCH__
+#ifdef __HIP_DEVICE_COMPILE__
     return __longlong_as_double(0x7ff0000000000000ULL);
 #else
     return std::numeric_limits<double>::infinity();
@@ -45,7 +45,7 @@ inline double infinity() {
 template <>
 DEVICE
 inline float infinity() {
-#ifdef __CUDA_ARCH__
+#ifdef __HIP_DEVICE_COMPILE__
     return __int_as_float(0x7f800000);
 #else
     return std::numeric_limits<float>::infinity();

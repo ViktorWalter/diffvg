@@ -128,7 +128,7 @@ inline uint32_t expand_bits(uint32_t x) {
 
 // DEVICE
 // inline int clz(uint64_t x) {
-// #ifdef __CUDA_ARCH__
+// #ifdef __HIP_DEVICE_COMPILE__
 //     return __clzll(x);
 // #else
 //     // TODO: use _BitScanReverse in windows
@@ -138,7 +138,7 @@ inline uint32_t expand_bits(uint32_t x) {
 
 // DEVICE
 // inline int ffs(uint8_t x) {
-// #ifdef __CUDA_ARCH__
+// #ifdef __HIP_DEVICE_COMPILE__
 //     return __ffs(x);
 // #else
 //     // TODO: use _BitScanReverse in windows
@@ -148,7 +148,7 @@ inline uint32_t expand_bits(uint32_t x) {
 
 // DEVICE
 // inline int popc(uint8_t x) {
-// #ifdef __CUDA_ARCH__
+// #ifdef __HIP_DEVICE_COMPILE__
 //     return __popc(x);
 // #else
 //     // TODO: use _popcnt in windows
